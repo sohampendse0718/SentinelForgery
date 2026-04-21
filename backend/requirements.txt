@@ -1,0 +1,21 @@
+# ─── Web Framework ──────────────────────────────────────────────────────────
+fastapi==0.115.12
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+
+# ─── Data Validation ────────────────────────────────────────────────────────
+pydantic==2.11.4
+
+# ─── Computer Vision & Image Processing ─────────────────────────────────────
+opencv-python-headless==4.11.0.86
+Pillow==11.2.1
+numpy==2.2.5
+
+# ─── EXIF / Metadata ────────────────────────────────────────────────────────
+ExifRead==3.0.0
+
+# ─── External API (HuggingFace) ──────────────────────────────────────────────
+httpx==0.28.1
+
+# ─── Environment ────────────────────────────────────────────────────────────
+python-dotenv==1.1.0

@@ -21,11 +21,7 @@ export function AuthView({ onLogin }: { onLogin: () => void }) {
           <div className="flex flex-col items-start gap-1">
             <div className="relative mb-12">
               <div className="absolute inset-0 bg-[#00f0ff]/20 blur-3xl rounded-full scale-150 animate-pulse"></div>
-              <div className="relative flex items-center justify-center w-24 h-24 rounded-full bg-[#0a0a0a] border border-[#00f0ff]/30 shadow-[inset_0_0_20px_rgba(0,240,255,0.1),0_0_40px_rgba(0,240,255,0.2)]">
-                <span className="material-symbols-outlined text-[48px] text-[#00f0ff] animate-pulse" style={{ fontVariationSettings: "'FILL' 1" }}>
-                  shield
-                </span>
-              </div>
+              
             </div>
             
             <h1 className="font-heading text-[64px] leading-[1] font-bold text-white mb-6 tracking-tight drop-shadow-2xl">
