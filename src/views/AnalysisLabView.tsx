@@ -19,7 +19,7 @@ interface AnalysisResult {
   filename: string;
   content_type: string;
   metadata: Record<string, string>;
-  ela_heatmap_base64: string;
+  ela_heatmap: string;
   ai_analysis: AIAnalysis;
 }
 
@@ -85,7 +85,7 @@ export function AnalysisLabView() {
 
     try {
       pushLog('Dispatching payload to Tathya.io Forensics API…', 'info');
-      const res = await fetch(`${API_BASE}/api/analyze/image`, {
+      const res = await fetch('http://localhost:8000/api/analyze', {
         method: 'POST',
         body: formData,
       });
@@ -237,7 +237,7 @@ export function AnalysisLabView() {
                 <span>{result?.filename ?? 'No artifact loaded'}</span>
               </div>
               <div className="flex items-center gap-4 font-mono text-[10px] text-zinc-500">
-                {result && <span>FMT: {result.content_type.split('/')[1]?.toUpperCase()}</span>}
+                {result && <span>FMT: {result.content_type?.split('/')[1]?.toUpperCase()}</span>}
               </div>
             </div>
 
@@ -252,17 +252,17 @@ export function AnalysisLabView() {
                 )}
 
                 {/* ELA Heatmap overlay */}
-                {result?.ela_heatmap_base64 && (
+                {result?.ela_heatmap && (
                   <div
                     className="absolute inset-0 w-full h-full"
                     style={{ clipPath: `inset(0 ${100 - sliderPos}% 0 0)` }}
                   >
-                    <img src={result.ela_heatmap_base64} alt="ELA heatmap" className="w-full h-full object-contain" />
+                    <img src={result.ela_heatmap} alt="ELA heatmap" className="w-full h-full object-contain" />
                   </div>
                 )}
 
                 {/* Slider divider line */}
-                {result?.ela_heatmap_base64 && (
+                {result?.ela_heatmap && (
                   <div
                     className="absolute inset-y-0 w-[2px] bg-primary -translate-x-1/2 shadow-[0_0_10px_rgba(0,240,255,0.8)] z-20 pointer-events-none"
                     style={{ left: `${sliderPos}%` }}
@@ -273,7 +273,7 @@ export function AnalysisLabView() {
                   </div>
                 )}
 
-                {result?.ela_heatmap_base64 && (
+                {result?.ela_heatmap && (
                   <>
                     <div className="absolute bottom-4 left-4 bg-surface/80 backdrop-blur-md px-3 py-1 border border-white/10 rounded font-mono text-[10px] text-primary z-10">ELA Heatmap</div>
                     <div className="absolute bottom-4 right-4 bg-surface/80 backdrop-blur-md px-3 py-1 border border-white/10 rounded font-mono text-[10px] text-white z-10">Source Artifact</div>
@@ -333,9 +333,9 @@ export function AnalysisLabView() {
               >
                 Metadata
               </button>
-              {result?.ela_heatmap_base64 && (
+              {result?.ela_heatmap && (
                 <a
-                  href={result.ela_heatmap_base64}
+                  href={result.ela_heatmap}
                   download={`ela_${result.filename}`}
                   className="ml-auto p-2 text-zinc-500 hover:text-primary hover:bg-white/5 rounded transition-colors outline-none"
                   title="Download ELA heatmap"
@@ -407,8 +407,8 @@ export function AnalysisLabView() {
                 {
                   label: 'ELA Signal',
                   icon: FileSearch2,
-                  value: result ? (result.ela_heatmap_base64 ? 'Heatmap Generated' : 'Failed') : '—',
-                  ok: !!result?.ela_heatmap_base64,
+                  value: result ? (result.ela_heatmap ? 'Heatmap Generated' : 'Failed') : '—',
+                  ok: !!result?.ela_heatmap,
                 },
                 {
                   label: 'EXIF Integrity',

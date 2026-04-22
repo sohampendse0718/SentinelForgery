@@ -1,7 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
-  // We can add rewrites here later as requested by the user
-};
+  async rewrites() {
+    return [
+      {
+        source: '/supabase-proxy/:path*',
+        // We are hardcoding this temporarily to bypass the 'undefined' error
+        destination: 'https://cbpaqkhntdpmwlzlemgp.supabase.co/:path*',
+      },
+    ];
+  },
+}
 
 export default nextConfig;

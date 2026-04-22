@@ -1,4 +1,4 @@
-import { Terminal, LayoutDashboard, Microscope, Archive, Activity, FileTerminal, HelpCircle } from "lucide-react";
+import { Terminal, LayoutDashboard, Microscope, Archive, FileTerminal, HelpCircle } from "lucide-react";
 import { cn } from "../lib/utils";
 
 interface SidebarProps {
@@ -11,7 +11,6 @@ export function Sidebar({ currentView, onNavigate }: SidebarProps) {
     { id: 'dashboard', label: 'Command Center', icon: LayoutDashboard },
     { id: 'analysis', label: 'Analysis Lab', icon: Microscope },
     { id: 'vault', label: 'The Vault', icon: Archive },
-    { id: 'intelligence', label: 'Intelligence', icon: Activity },
   ];
 
   return (
