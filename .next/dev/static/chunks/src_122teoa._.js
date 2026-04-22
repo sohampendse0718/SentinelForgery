@@ -1817,7 +1817,7 @@ function AnalysisLabView() {
             formData.append('file', file);
             try {
                 pushLog('Dispatching payload to Tathya.io Forensics API…', 'info');
-                const res = await fetch('http://localhost:8000/api/analyze', {
+                const res = await fetch('http://localhost:8001/api/analyze', {
                     method: 'POST',
                     body: formData
                 });
@@ -1834,12 +1834,13 @@ function AnalysisLabView() {
                 pushLog(`EXIF tags extracted: ${Object.keys(data.metadata).length} fields.`, 'info');
                 const aiLabel = data.ai_analysis.label;
                 const aiScore = (data.ai_analysis.confidence_score * 100).toFixed(1);
-                if (aiLabel === 'AI Scan Unavailable') {
-                    pushLog('AI scan skipped — no HuggingFace token configured.', 'warn');
-                } else if (aiLabel === 'manipulated') {
-                    pushLog(`⚠ AI verdict: MANIPULATED (${aiScore}% confidence)`, 'warn');
+                if (aiLabel === 'ERROR' || aiLabel === 'AI Scan Unavailable') {
+                    const errMsg = data.ai_analysis.message ? ` Reason: ${data.ai_analysis.message}` : '';
+                    pushLog(`AI scan skipped or failed — check token/model.${errMsg}`, 'warn');
+                } else if (aiLabel === 'FAKE') {
+                    pushLog(`⚠ AI verdict: FAKE (${aiScore}% confidence)`, 'warn');
                 } else {
-                    pushLog(`✓ AI verdict: AUTHENTIC (${aiScore}% confidence)`, 'ok');
+                    pushLog(`✓ AI verdict: REAL (${aiScore}% confidence)`, 'ok');
                 }
                 pushLog('Scan complete. Final verdict matrix ready.', 'ok');
                 setResult(data);
@@ -1875,10 +1876,10 @@ function AnalysisLabView() {
         analyzeFile
     ]);
     // ── Derived UI values ────────────────────────────────────────────────────
-    const isManipulated = result?.ai_analysis.label === 'manipulated';
-    const isUnavailable = result?.ai_analysis.label === 'AI Scan Unavailable';
+    const isManipulated = result?.ai_analysis.label === 'FAKE';
+    const isUnavailable = result?.ai_analysis.label === 'ERROR' || result?.ai_analysis.label === 'AI Scan Unavailable';
     const confidence = result ? result.ai_analysis.confidence_score : 0;
-    const verdictColor = isUnavailable ? '#64748b' : isManipulated ? '#FF2A2A' : '#00FF66';
+    const verdictColor = isUnavailable ? '#64748b' : isManipulated ? '#DC143C' : '#00FF41'; // Crimson Red and Matrix Green
     const verdictLabel = isUnavailable ? 'Scan Unavailable' : isManipulated ? 'Tampering Detected' : 'Authentic';
     const VerdictIcon = isUnavailable ? __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$info$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Info$3e$__["Info"] : isManipulated ? __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$shield$2d$alert$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ShieldAlert$3e$__["ShieldAlert"] : __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$shield$2d$check$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ShieldCheck$3e$__["ShieldCheck"];
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1894,7 +1895,7 @@ function AnalysisLabView() {
                                 children: "Analysis Lab"
                             }, void 0, false, {
                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                lineNumber: 155,
+                                lineNumber: 156,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1902,13 +1903,13 @@ function AnalysisLabView() {
                                 children: "Core Upload · ELA · EXIF · AI Verdict"
                             }, void 0, false, {
                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                lineNumber: 156,
+                                lineNumber: 157,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                        lineNumber: 154,
+                        lineNumber: 155,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1922,14 +1923,14 @@ function AnalysisLabView() {
                                         className: "animate-spin"
                                     }, void 0, false, {
                                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                        lineNumber: 163,
+                                        lineNumber: 164,
                                         columnNumber: 15
                                     }, this),
                                     " Scanning…"
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                lineNumber: 162,
+                                lineNumber: 163,
                                 columnNumber: 13
                             }, this),
                             !loading && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1939,26 +1940,26 @@ function AnalysisLabView() {
                                         className: "w-2 h-2 rounded-full bg-success"
                                     }, void 0, false, {
                                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                        lineNumber: 168,
+                                        lineNumber: 169,
                                         columnNumber: 15
                                     }, this),
                                     "API Online"
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                lineNumber: 167,
+                                lineNumber: 168,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                        lineNumber: 160,
+                        lineNumber: 161,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                lineNumber: 153,
+                lineNumber: 154,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1986,14 +1987,14 @@ function AnalysisLabView() {
                                         onChange: onFileChange
                                     }, void 0, false, {
                                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                        lineNumber: 189,
+                                        lineNumber: 190,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none inner-glow-cyan rounded-lg"
                                     }, void 0, false, {
                                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                        lineNumber: 196,
+                                        lineNumber: 197,
                                         columnNumber: 13
                                     }, this),
                                     loading ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2005,7 +2006,7 @@ function AnalysisLabView() {
                                                 strokeWidth: 1.5
                                             }, void 0, false, {
                                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                lineNumber: 200,
+                                                lineNumber: 201,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2013,13 +2014,13 @@ function AnalysisLabView() {
                                                 children: "Running forensic scan…"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                lineNumber: 201,
+                                                lineNumber: 202,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                        lineNumber: 199,
+                                        lineNumber: 200,
                                         columnNumber: 15
                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
                                         children: [
@@ -2029,7 +2030,7 @@ function AnalysisLabView() {
                                                 strokeWidth: 1.5
                                             }, void 0, false, {
                                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                lineNumber: 205,
+                                                lineNumber: 206,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
@@ -2037,7 +2038,7 @@ function AnalysisLabView() {
                                                 children: result ? 'Drop another artifact' : 'Initialize Artifact Analysis'
                                             }, void 0, false, {
                                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                lineNumber: 206,
+                                                lineNumber: 207,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2045,7 +2046,7 @@ function AnalysisLabView() {
                                                 children: dragging ? 'Release to upload…' : 'Drag & drop an image, or click to browse'
                                             }, void 0, false, {
                                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                lineNumber: 209,
+                                                lineNumber: 210,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2058,7 +2059,7 @@ function AnalysisLabView() {
                                                 children: "Select Artifact"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                lineNumber: 212,
+                                                lineNumber: 213,
                                                 columnNumber: 17
                                             }, this)
                                         ]
@@ -2066,7 +2067,7 @@ function AnalysisLabView() {
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                lineNumber: 181,
+                                lineNumber: 182,
                                 columnNumber: 11
                             }, this),
                             error && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2077,20 +2078,20 @@ function AnalysisLabView() {
                                         className: "shrink-0 mt-0.5"
                                     }, void 0, false, {
                                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                        lineNumber: 226,
+                                        lineNumber: 227,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                         children: error
                                     }, void 0, false, {
                                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                        lineNumber: 227,
+                                        lineNumber: 228,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                lineNumber: 225,
+                                lineNumber: 226,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2106,20 +2107,20 @@ function AnalysisLabView() {
                                                         size: 16
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                        lineNumber: 236,
+                                                        lineNumber: 237,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                         children: result?.filename ?? 'No artifact loaded'
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                        lineNumber: 237,
+                                                        lineNumber: 238,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                lineNumber: 235,
+                                                lineNumber: 236,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2131,18 +2132,18 @@ function AnalysisLabView() {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                    lineNumber: 240,
+                                                    lineNumber: 241,
                                                     columnNumber: 28
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                lineNumber: 239,
+                                                lineNumber: 240,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                        lineNumber: 234,
+                                        lineNumber: 235,
                                         columnNumber: 13
                                     }, this),
                                     activeTab === 'ela' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2156,12 +2157,12 @@ function AnalysisLabView() {
                                                     className: "w-full h-full object-contain"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                    lineNumber: 250,
+                                                    lineNumber: 251,
                                                     columnNumber: 21
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                lineNumber: 249,
+                                                lineNumber: 250,
                                                 columnNumber: 19
                                             }, this),
                                             result?.ela_heatmap && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2175,12 +2176,12 @@ function AnalysisLabView() {
                                                     className: "w-full h-full object-contain"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                    lineNumber: 260,
+                                                    lineNumber: 261,
                                                     columnNumber: 21
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                lineNumber: 256,
+                                                lineNumber: 257,
                                                 columnNumber: 19
                                             }, this),
                                             result?.ela_heatmap && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2195,17 +2196,17 @@ function AnalysisLabView() {
                                                         children: "||"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                        lineNumber: 271,
+                                                        lineNumber: 272,
                                                         columnNumber: 23
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                    lineNumber: 270,
+                                                    lineNumber: 271,
                                                     columnNumber: 21
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                lineNumber: 266,
+                                                lineNumber: 267,
                                                 columnNumber: 19
                                             }, this),
                                             result?.ela_heatmap && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -2215,7 +2216,7 @@ function AnalysisLabView() {
                                                         children: "ELA Heatmap"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                        lineNumber: 278,
+                                                        lineNumber: 279,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2223,7 +2224,7 @@ function AnalysisLabView() {
                                                         children: "Source Artifact"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                        lineNumber: 279,
+                                                        lineNumber: 280,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2235,7 +2236,7 @@ function AnalysisLabView() {
                                                         className: "absolute inset-0 w-full h-full opacity-0 cursor-ew-resize z-30"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                        lineNumber: 280,
+                                                        lineNumber: 281,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
@@ -2247,18 +2248,18 @@ function AnalysisLabView() {
                                                     children: "Upload an artifact to begin"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                    lineNumber: 290,
+                                                    lineNumber: 291,
                                                     columnNumber: 21
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                lineNumber: 289,
+                                                lineNumber: 290,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                        lineNumber: 246,
+                                        lineNumber: 247,
                                         columnNumber: 15
                                     }, this),
                                     activeTab === 'metadata' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2274,7 +2275,7 @@ function AnalysisLabView() {
                                                                 children: key
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                                lineNumber: 303,
+                                                                lineNumber: 304,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -2282,23 +2283,23 @@ function AnalysisLabView() {
                                                                 children: value
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                                lineNumber: 304,
+                                                                lineNumber: 305,
                                                                 columnNumber: 27
                                                             }, this)
                                                         ]
                                                     }, key, true, {
                                                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                        lineNumber: 302,
+                                                        lineNumber: 303,
                                                         columnNumber: 25
                                                     }, this))
                                             }, void 0, false, {
                                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                lineNumber: 300,
+                                                lineNumber: 301,
                                                 columnNumber: 21
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                            lineNumber: 299,
+                                            lineNumber: 300,
                                             columnNumber: 19
                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             className: "h-full flex items-center justify-center",
@@ -2307,17 +2308,17 @@ function AnalysisLabView() {
                                                 children: result ? 'No EXIF metadata found in this artifact.' : 'Run a scan first.'
                                             }, void 0, false, {
                                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                lineNumber: 311,
+                                                lineNumber: 312,
                                                 columnNumber: 21
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                            lineNumber: 310,
+                                            lineNumber: 311,
                                             columnNumber: 19
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                        lineNumber: 297,
+                                        lineNumber: 298,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2329,20 +2330,6 @@ function AnalysisLabView() {
                                                     size: 18
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                    lineNumber: 321,
-                                                    columnNumber: 128
-                                                }, this)
-                                            }, void 0, false, {
-                                                fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                lineNumber: 321,
-                                                columnNumber: 15
-                                            }, this),
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-                                                className: "p-2 text-zinc-500 hover:text-primary hover:bg-white/5 rounded transition-colors outline-none",
-                                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$zoom$2d$out$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ZoomOut$3e$__["ZoomOut"], {
-                                                    size: 18
-                                                }, void 0, false, {
-                                                    fileName: "[project]/src/views/AnalysisLabView.tsx",
                                                     lineNumber: 322,
                                                     columnNumber: 128
                                                 }, this)
@@ -2351,11 +2338,25 @@ function AnalysisLabView() {
                                                 lineNumber: 322,
                                                 columnNumber: 15
                                             }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                className: "p-2 text-zinc-500 hover:text-primary hover:bg-white/5 rounded transition-colors outline-none",
+                                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$zoom$2d$out$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ZoomOut$3e$__["ZoomOut"], {
+                                                    size: 18
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/views/AnalysisLabView.tsx",
+                                                    lineNumber: 323,
+                                                    columnNumber: 128
+                                                }, this)
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/views/AnalysisLabView.tsx",
+                                                lineNumber: 323,
+                                                columnNumber: 15
+                                            }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 className: "w-px h-6 bg-white/10 mx-2"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                lineNumber: 323,
+                                                lineNumber: 324,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2364,7 +2365,7 @@ function AnalysisLabView() {
                                                 children: "ELA"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                lineNumber: 324,
+                                                lineNumber: 325,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2373,7 +2374,7 @@ function AnalysisLabView() {
                                                 children: "Metadata"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                lineNumber: 330,
+                                                lineNumber: 331,
                                                 columnNumber: 15
                                             }, this),
                                             result?.ela_heatmap && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("a", {
@@ -2385,30 +2386,30 @@ function AnalysisLabView() {
                                                     size: 18
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                    lineNumber: 343,
+                                                    lineNumber: 344,
                                                     columnNumber: 19
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                lineNumber: 337,
+                                                lineNumber: 338,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                        lineNumber: 320,
+                                        lineNumber: 321,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                lineNumber: 232,
+                                lineNumber: 233,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                        lineNumber: 178,
+                        lineNumber: 179,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2424,7 +2425,7 @@ function AnalysisLabView() {
                                         }
                                     }, void 0, false, {
                                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                        lineNumber: 355,
+                                        lineNumber: 356,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
@@ -2432,7 +2433,7 @@ function AnalysisLabView() {
                                         children: "Analysis Verdict"
                                     }, void 0, false, {
                                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                        lineNumber: 359,
+                                        lineNumber: 360,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2454,7 +2455,7 @@ function AnalysisLabView() {
                                                                 strokeWidth: "8"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                                lineNumber: 365,
+                                                                lineNumber: 366,
                                                                 columnNumber: 19
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("circle", {
@@ -2472,13 +2473,13 @@ function AnalysisLabView() {
                                                                 }
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                                lineNumber: 366,
+                                                                lineNumber: 367,
                                                                 columnNumber: 19
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                        lineNumber: 364,
+                                                        lineNumber: 365,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2491,7 +2492,7 @@ function AnalysisLabView() {
                                                             }
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                            lineNumber: 377,
+                                                            lineNumber: 378,
                                                             columnNumber: 21
                                                         }, this) : result ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
                                                             children: [
@@ -2506,7 +2507,7 @@ function AnalysisLabView() {
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                                    lineNumber: 380,
+                                                                    lineNumber: 381,
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2517,7 +2518,7 @@ function AnalysisLabView() {
                                                                     children: "Confidence"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                                    lineNumber: 383,
+                                                                    lineNumber: 384,
                                                                     columnNumber: 23
                                                                 }, this)
                                                             ]
@@ -2527,25 +2528,25 @@ function AnalysisLabView() {
                                                                 "Awaiting",
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("br", {}, void 0, false, {
                                                                     fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                                    lineNumber: 388,
+                                                                    lineNumber: 389,
                                                                     columnNumber: 121
                                                                 }, this),
                                                                 "Artifact"
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                            lineNumber: 388,
+                                                            lineNumber: 389,
                                                             columnNumber: 21
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                        lineNumber: 375,
+                                                        lineNumber: 376,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                lineNumber: 363,
+                                                lineNumber: 364,
                                                 columnNumber: 15
                                             }, this),
                                             result && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2560,20 +2561,20 @@ function AnalysisLabView() {
                                                         size: 16
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                        lineNumber: 398,
+                                                        lineNumber: 399,
                                                         columnNumber: 19
                                                     }, this),
                                                     verdictLabel
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                lineNumber: 394,
+                                                lineNumber: 395,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                        lineNumber: 362,
+                                        lineNumber: 363,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2594,8 +2595,8 @@ function AnalysisLabView() {
                                             {
                                                 label: 'AI Classification',
                                                 icon: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$cpu$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Cpu$3e$__["Cpu"],
-                                                value: result ? result.ai_analysis.label === 'AI Scan Unavailable' ? 'No Token' : result.ai_analysis.label.charAt(0).toUpperCase() + result.ai_analysis.label.slice(1) : '—',
-                                                ok: result ? result.ai_analysis.label === 'authentic' : null
+                                                value: result ? result.ai_analysis.label === 'ERROR' || result.ai_analysis.label === 'AI Scan Unavailable' ? 'No Token / Error' : result.ai_analysis.label : '—',
+                                                ok: result ? result.ai_analysis.label === 'REAL' : null
                                             }
                                         ].map(({ label, icon: Icon, value, ok })=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 className: "bg-[#1A1A1A] rounded p-3 border border-white/5 flex justify-between items-center",
@@ -2608,14 +2609,14 @@ function AnalysisLabView() {
                                                                 className: "text-zinc-600"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                                lineNumber: 436,
+                                                                lineNumber: 437,
                                                                 columnNumber: 21
                                                             }, this),
                                                             label
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                        lineNumber: 435,
+                                                        lineNumber: 436,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2626,24 +2627,24 @@ function AnalysisLabView() {
                                                         children: value
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                        lineNumber: 439,
+                                                        lineNumber: 440,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, label, true, {
                                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                lineNumber: 434,
+                                                lineNumber: 435,
                                                 columnNumber: 17
                                             }, this))
                                     }, void 0, false, {
                                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                        lineNumber: 405,
+                                        lineNumber: 406,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                lineNumber: 354,
+                                lineNumber: 355,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2657,7 +2658,7 @@ function AnalysisLabView() {
                                                 children: "Execution Log"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                lineNumber: 455,
+                                                lineNumber: 456,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2666,13 +2667,13 @@ function AnalysisLabView() {
                                                 children: "clear"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                lineNumber: 456,
+                                                lineNumber: 457,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                        lineNumber: 454,
+                                        lineNumber: 455,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2686,7 +2687,7 @@ function AnalysisLabView() {
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                lineNumber: 465,
+                                                lineNumber: 466,
                                                 columnNumber: 17
                                             }, this),
                                             log.map((entry, i)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2697,7 +2698,7 @@ function AnalysisLabView() {
                                                             children: entry.time
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                            lineNumber: 469,
+                                                            lineNumber: 470,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2709,50 +2710,50 @@ function AnalysisLabView() {
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                            lineNumber: 470,
+                                                            lineNumber: 471,
                                                             columnNumber: 19
                                                         }, this)
                                                     ]
                                                 }, i, true, {
                                                     fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                    lineNumber: 468,
+                                                    lineNumber: 469,
                                                     columnNumber: 17
                                                 }, this)),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 ref: logEndRef
                                             }, void 0, false, {
                                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                                lineNumber: 479,
+                                                lineNumber: 480,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                        lineNumber: 463,
+                                        lineNumber: 464,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                                lineNumber: 453,
+                                lineNumber: 454,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/views/AnalysisLabView.tsx",
-                        lineNumber: 351,
+                        lineNumber: 352,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/views/AnalysisLabView.tsx",
-                lineNumber: 175,
+                lineNumber: 176,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/views/AnalysisLabView.tsx",
-        lineNumber: 150,
+        lineNumber: 151,
         columnNumber: 5
     }, this);
 }

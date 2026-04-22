@@ -85,7 +85,7 @@ export function AnalysisLabView() {
 
     try {
       pushLog('Dispatching payload to Tathya.io Forensics API…', 'info');
-      const res = await fetch('http://localhost:8000/api/analyze', {
+      const res = await fetch('http://localhost:8001/api/analyze', {
         method: 'POST',
         body: formData,
       });
@@ -103,12 +103,13 @@ export function AnalysisLabView() {
       const aiLabel = data.ai_analysis.label;
       const aiScore = (data.ai_analysis.confidence_score * 100).toFixed(1);
 
-      if (aiLabel === 'AI Scan Unavailable') {
-        pushLog('AI scan skipped — no HuggingFace token configured.', 'warn');
-      } else if (aiLabel === 'manipulated') {
-        pushLog(`⚠ AI verdict: MANIPULATED (${aiScore}% confidence)`, 'warn');
+      if (aiLabel === 'ERROR' || aiLabel === 'AI Scan Unavailable') {
+        const errMsg = data.ai_analysis.message ? ` Reason: ${data.ai_analysis.message}` : '';
+        pushLog(`AI scan skipped or failed — check token/model.${errMsg}`, 'warn');
+      } else if (aiLabel === 'FAKE') {
+        pushLog(`⚠ AI verdict: FAKE (${aiScore}% confidence)`, 'warn');
       } else {
-        pushLog(`✓ AI verdict: AUTHENTIC (${aiScore}% confidence)`, 'ok');
+        pushLog(`✓ AI verdict: REAL (${aiScore}% confidence)`, 'ok');
       }
 
       pushLog('Scan complete. Final verdict matrix ready.', 'ok');
@@ -139,10 +140,10 @@ export function AnalysisLabView() {
 
   // ── Derived UI values ────────────────────────────────────────────────────
 
-  const isManipulated = result?.ai_analysis.label === 'manipulated';
-  const isUnavailable = result?.ai_analysis.label === 'AI Scan Unavailable';
+  const isManipulated = result?.ai_analysis.label === 'FAKE';
+  const isUnavailable = result?.ai_analysis.label === 'ERROR' || result?.ai_analysis.label === 'AI Scan Unavailable';
   const confidence    = result ? result.ai_analysis.confidence_score : 0;
-  const verdictColor  = isUnavailable ? '#64748b' : isManipulated ? '#FF2A2A' : '#00FF66';
+  const verdictColor  = isUnavailable ? '#64748b' : isManipulated ? '#DC143C' : '#00FF41'; // Crimson Red and Matrix Green
   const verdictLabel  = isUnavailable ? 'Scan Unavailable' : isManipulated ? 'Tampering Detected' : 'Authentic';
   const VerdictIcon   = isUnavailable ? Info : isManipulated ? ShieldAlert : ShieldCheck;
 
@@ -424,11 +425,11 @@ export function AnalysisLabView() {
                   label: 'AI Classification',
                   icon: Cpu,
                   value: result
-                    ? result.ai_analysis.label === 'AI Scan Unavailable'
-                      ? 'No Token'
-                      : result.ai_analysis.label.charAt(0).toUpperCase() + result.ai_analysis.label.slice(1)
+                    ? result.ai_analysis.label === 'ERROR' || result.ai_analysis.label === 'AI Scan Unavailable'
+                      ? 'No Token / Error'
+                      : result.ai_analysis.label
                     : '—',
-                  ok: result ? result.ai_analysis.label === 'authentic' : null,
+                  ok: result ? result.ai_analysis.label === 'REAL' : null,
                 },
               ].map(({ label, icon: Icon, value, ok }) => (
                 <div key={label} className="bg-[#1A1A1A] rounded p-3 border border-white/5 flex justify-between items-center">
