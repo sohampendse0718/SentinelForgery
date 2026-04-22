@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", sans-serif;
+  --font-mono: "Space Grotesk", monospace;
+  --font-heading: "Space Grotesk", sans-serif;
+
+  --color-background: #0A0A0A;
+  --color-surface: #121212;
+  --color-surface-hover: #1A1A1A;
+  --color-surface-dim: #0D0E0F;
+  --color-surface-bright: #292a2a;
+  --color-primary: #00F0FF;
+  --color-error: #FF2A2A;
+  --color-success: #00FF66;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-white font-sans selection:bg-primary/20 selection:text-primary;
+    overflow-x: hidden;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading tracking-tight;
+  }
+}
+
+@layer utilities {
+  .inner-glow-cyan {
+    box-shadow: inset 0 0 15px rgba(0, 240, 255, 0.1);
+  }
+  .inner-glow-error {
+    box-shadow: inset 0 0 15px rgba(255, 42, 42, 0.1);
+  }
+  .glass-panel {
+    @apply bg-surface/80 backdrop-blur-xl border border-white/10;
+  }
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 240, 255, 0.3);
+  }
+}
