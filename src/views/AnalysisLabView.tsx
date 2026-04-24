@@ -1,3 +1,4 @@
+import { supabase } from '../lib/supabase';
 import { useState, useRef, useCallback, DragEvent, ChangeEvent } from 'react';
 import {
   UploadCloud, Image as ImageIcon, ZoomIn, ZoomOut,
@@ -80,14 +81,38 @@ export function AnalysisLabView() {
     pushLog(`Artifact received: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`, 'info');
     pushLog('Initialising forensic scan protocol…', 'info');
 
-    const formData = new FormData();
-    formData.append('file', file);
+    // 1. Generate a unique filename to prevent overwriting
+    const fileExt = file.name.split('.').pop();
+    const uniqueFileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
     try {
-      pushLog('Dispatching payload to Tathya.io Forensics API…', 'info');
+      // 2. Upload the raw image to Supabase
+      pushLog(`Uploading artifact to secure vault...`, 'info');
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('forensics_dropzone')
+        .upload(uniqueFileName, file);
+
+      if (uploadError) {
+        throw new Error(`Cloud upload failed: ${uploadError.message}`);
+      }
+
+      // 3. Get the public URL for the Python engine to download
+      const { data: { publicUrl } } = supabase.storage
+        .from('forensics_dropzone')
+        .getPublicUrl(uniqueFileName);
+
+      pushLog(`Artifact secured. Dispatching URL to Sentinel API...`, 'info');
+
+      // 4. Send the URL (not the file) to your Python backend
       const res = await fetch('http://localhost:8000/api/analyze', {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          filename: file.name,
+          file_url: publicUrl
+        }),
       });
 
       if (!res.ok) {
@@ -96,6 +121,36 @@ export function AnalysisLabView() {
       }
 
       const data: AnalysisResult = await res.json();
+
+      
+
+      // --- NEW DATABASE SAVE LOGIC ---
+      pushLog(`Archiving forensic report to the Vault...`, 'info');
+      
+      const { error: dbError } = await supabase
+        .from('forensic_scans')
+        .insert([
+          {
+            filename: file.name,
+            file_type: file.type,
+            file_hash: uniqueFileName, // Using our unique name as a pseudo-hash for now
+            status: 'Inconclusive', // Default status until AI is active
+            ela_heatmap_url: data.ela_heatmap, 
+            exif_data: data.metadata,
+            ai_deepfake_score: null // We will update this in Phase 4 when AI is awake
+          }
+        ]);
+
+      if (dbError) {
+        console.error("Database save failed:", dbError);
+        pushLog(`Warning: Failed to archive report to Vault.`, 'warn');
+      } else {
+        pushLog(`Report successfully archived in the Vault.`, 'ok');
+      }
+      // --------------------------------
+
+      // The rest of your existing code continues below...
+      pushLog('ELA heatmap generated successfully.', 'ok');
 
       pushLog('ELA heatmap generated successfully.', 'ok');
       pushLog(`EXIF tags extracted: ${Object.keys(data.metadata).length} fields.`, 'info');

@@ -1,16 +1,38 @@
+import { supabase } from '../lib/supabase';
+import { useEffect } from 'react';
 import { useState } from 'react';
 import { Search, Filter, ArrowUpDown, Video, Mic, FileText, X, AlertTriangle } from 'lucide-react';
 
-const mockVaultData = [
-  { id: '1', name: 'ID-7729-A_SRC.mp4', hash: '8f4a2b9e...', date: '2023.10.24 14:32Z', type: 'Audio/Video', status: 'Authentic', img: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80' },
-  { id: '2', name: 'Q3_EARNINGS_LEAK.wav', hash: 'c49f10da...', date: '2023.10.24 11:05Z', type: 'Voice Cloning', status: 'Manipulated', img: 'https://images.unsplash.com/photo-1541819380-00d3aa4cb5ff?auto=format&fit=crop&q=80', isCritical: true },
-  { id: '3', name: 'PASSPORT_SCAN_092.pdf', hash: '11a0d3f8...', date: '2023.10.23 08:14Z', type: 'Document Forgery', status: 'Inconclusive', img: null },
-];
+
 
 export function VaultView() {
-  const [selectedId, setSelectedId] = useState<string | null>('2');
+  const [vaultRecords, setVaultRecords] = useState<any[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const selectedItem = mockVaultData.find(item => item.id === selectedId);
+  useEffect(() => {
+    async function fetchRecords() {
+      const { data, error } = await supabase
+        .from('forensic_scans')
+        .select('*')
+        .order('created_at', { ascending: false }); // Newest scans at the top
+
+      if (data) {
+        // Map the raw database columns to exactly what your UI expects
+        const formattedData = data.map((row: any) => ({
+          id: row.id,
+          name: row.filename,
+          hash: row.file_hash ? row.file_hash.substring(0, 15) + '...' : 'Pending...',
+          date: new Date(row.created_at).toLocaleString(),
+          type: row.file_type?.includes('image') ? 'Image Scan' : row.file_type,
+          status: row.status
+        }));
+        setVaultRecords(formattedData);
+      }
+    }
+    fetchRecords();
+  }, []);
+
+  const selectedItem = vaultRecords.find(item => item.id === selectedId);
 
   return (
     <div className="flex w-full h-[calc(100vh-6rem)] gap-6">
@@ -51,7 +73,7 @@ export function VaultView() {
           </div>
 
           <div className="flex flex-col gap-2 pt-2 overflow-y-auto custom-scrollbar pb-8">
-            {mockVaultData.map(item => {
+            {vaultRecords.map(item => {
               const isSelected = item.id === selectedId;
               
               return (

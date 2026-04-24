@@ -1,11 +1,13 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js';
 
-// 1. Determine the environment to outsmart the DNS block
-const supabaseUrl = typeof window !== 'undefined' 
-  ? `${window.location.origin}/supabase-proxy` // Client-side browser uses the proxy
-  : process.env.NEXT_PUBLIC_SUPABASE_URL!;     // Server-side (Vercel) goes direct
+// 1. Hardcode your public keys safely to bypass Windows/OneDrive file locks
+const SUPABASE_URL = 'https://cbpaqkhntdpmwlzlemgp.supabase.co'; // <--- Paste URL here
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNicGFxa2hudGRwbXdsemxlbWdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4NTgyMDQsImV4cCI6MjA5MjQzNDIwNH0.Q8b-SUJ02cQ15C7bQupyBNGYtkChhnfSojkaI_QO50A';   // <--- Paste Key here
 
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+// 2. Keep the proxy logic for the client side to outsmart ISP blocks
+const supabaseUrl = typeof window !== 'undefined'
+  ? `${window.location.origin}/supabase-proxy`
+  : SUPABASE_URL;
 
-// 2. Initialize the client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// 3. Initialize the client
+export const supabase = createClient(supabaseUrl, SUPABASE_ANON_KEY);

@@ -1,4 +1,6 @@
 import os
+from pydantic import BaseModel
+import httpx
 from image_engine import extract_metadata, generate_ela_heatmap, scan_with_ai
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -44,15 +46,23 @@ app.add_middleware(
 async def root():
     return {"status": "Online", "database_connected": supabase is not None}
 
+class ImagePayload(BaseModel):
+    filename: str
+    file_url: str    
+
 @app.post("/api/analyze")
-async def analyze_image(file: UploadFile = File(...)):
-    print(f"--- INCOMING FILE: {file.filename} ---")
+async def analyze_image(payload: ImagePayload):
+    print(f"--- INCOMING CLOUD ARTIFACT: {payload.filename} ---")
     
     try:
-        # 1. Read the raw image bytes from the upload
-        image_bytes = await file.read()
+        # 1. Download the raw image bytes from the Supabase URL
+        print(">> Downloading image from secure vault...")
+        async with httpx.AsyncClient() as client:
+            response = await client.get(payload.file_url)
+            response.raise_for_status() # Make sure the download didn't fail
+            image_bytes = response.content
         
-        # 2. Run the forensic engines
+        # 2. Run the forensic engines (Unchanged)
         print(">> Extracting metadata...")
         metadata = extract_metadata(image_bytes)
         
@@ -66,7 +76,7 @@ async def analyze_image(file: UploadFile = File(...)):
         # 3. Package the results into the exact JSON React is expecting
         return {
             "status": "success",
-            "filename": file.filename,
+            "filename": payload.filename,
             "metadata": metadata,
             "ela_heatmap": ela_heatmap,
             "ai_analysis": ai_result
@@ -74,4 +84,4 @@ async def analyze_image(file: UploadFile = File(...)):
         
     except Exception as e:
         print(f"ERROR: {str(e)}")
-        return {"status": "error", "message": str(e)}   
+        return {"status": "error", "message": str(e)}
