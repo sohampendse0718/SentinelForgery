@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 import { Layout } from '../components/Layout';
 import { AuthView } from '../views/AuthView';
 import { DashboardView } from '../views/DashboardView';
@@ -11,8 +12,34 @@ import {ForensicDropzone} from '../components/ForensicDropzone';
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentView, setCurrentView] = useState('dashboard');
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
-  if (!isAuthenticated) return <AuthView onLogin={() => setIsAuthenticated(true)} />;
+  useEffect(() => {
+    // 1. Check if they already have a key (e.g., right after Google redirects them back)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+      setIsCheckingAuth(false);
+    });
+
+    // 2. Keep an ear to the ground for any login/logout events
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Show a sleek terminal loading screen while we verify the keys
+  if (isCheckingAuth) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#020202] text-[#00f0ff] font-sans tracking-[0.2em] uppercase text-sm animate-pulse">
+        Verifying Clearance...
+      </div>
+    );
+  }
+
+  // If no keys, bounce them to the login screen
+  if (!isAuthenticated) return <AuthView onLogin={() => {}} />;
 
  const renderView = () => {
   switch (currentView) {
@@ -36,7 +63,14 @@ export default function Home() {
 };
 
   return (
-    <Layout currentView={currentView} onNavigate={setCurrentView} onLogout={() => { setIsAuthenticated(false); setCurrentView('dashboard'); }}>
+    <Layout 
+      currentView={currentView} 
+      onNavigate={setCurrentView} 
+      onLogout={async () => { 
+        await supabase.auth.signOut(); 
+        setCurrentView('dashboard'); 
+      }}
+    >
       {renderView()}
     </Layout>
   );

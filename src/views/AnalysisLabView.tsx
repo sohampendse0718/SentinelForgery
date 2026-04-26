@@ -127,19 +127,30 @@ export function AnalysisLabView() {
       // --- NEW DATABASE SAVE LOGIC ---
       pushLog(`Archiving forensic report to the Vault...`, 'info');
       
-      const { error: dbError } = await supabase
-        .from('forensic_scans')
-        .insert([
-          {
-            filename: file.name,
-            file_type: file.type,
-            file_hash: uniqueFileName, // Using our unique name as a pseudo-hash for now
-            status: 'Inconclusive', // Default status until AI is active
-            ela_heatmap_url: data.ela_heatmap, 
-            exif_data: data.metadata,
-            ai_deepfake_score: null // We will update this in Phase 4 when AI is awake
-          }
-        ]);
+      // First, grab the logged-in operative's ID
+const { data: { session } } = await supabase.auth.getSession();
+const userId = session?.user?.id;
+
+if (!userId) {
+  pushLog('Error: Operative identity not verified. Archive aborted.', 'warn');
+  return; 
+}
+
+// Now, send the payload WITH the user_id attached
+const { error: dbError } = await supabase
+  .from('forensic_scans')
+  .insert([
+    {
+      user_id: userId, // <-- THIS IS THE MAGIC KEY
+      filename: file.name,
+      file_type: file.type,
+      file_hash: uniqueFileName,
+      status: 'Inconclusive',
+      ela_heatmap_url: data.ela_heatmap,
+      exif_data: data.metadata,
+      ai_deepfake_score: null 
+    }
+  ]);
 
       if (dbError) {
         console.error("Database save failed:", dbError);

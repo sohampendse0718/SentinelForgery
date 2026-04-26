@@ -1,4 +1,15 @@
+import { supabase } from '../lib/supabase';
 export function AuthView({ onLogin }: { onLogin: () => void }) {
+  const handleGoogleLogin = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        // This tells Google to send the user right back to your app after logging in
+        redirectTo: window.location.origin, 
+      },
+    });
+    if (error) console.error("Google login failed:", error.message);
+  };
   return (
     <main className="flex w-full min-h-screen flex-col lg:flex-row bg-[#020202] text-[#f8fafc] selection:bg-[#00f0ff] selection:text-[#001f21] font-sans overflow-hidden">
       {/* Left Section - Hero Visual */}
@@ -57,7 +68,8 @@ export function AuthView({ onLogin }: { onLogin: () => void }) {
 
           {/* Social Auth */}
           <button 
-            type="button" 
+           type="button" 
+            onClick={handleGoogleLogin} 
             className="w-full h-14 flex items-center justify-center gap-4 rounded-xl border border-white/10 bg-[#161616] text-white text-[13px] font-bold uppercase tracking-[0.1em] hover:bg-[#1a1a1a] hover:border-white/20 transition-all duration-200 shadow-lg active:scale-[0.99]"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
